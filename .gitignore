@@ -1,3 +1,11 @@
+# Build
+**/out
+**/out-*
+**/temp
+**/temp-
+**/build
+**/build-*
+
 # Prerequisites
 *.d
 
@@ -53,3 +61,6 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Misc
+**/.DS_Store
