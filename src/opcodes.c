@@ -47,9 +47,10 @@ OpcodeType getOpcodeType(WORD opcode) {
         case 0xC: return OP_RAND;
         case 0xD: return OP_DRAW;
         case 0xE: {
-            if ((opcode & 0x009E) != 0) {
+            uint16_t trailingWord = (opcode & 0x00FF);
+            if (trailingWord == 0x9E) {
                 return OP_KEY_SKIP;
-            } else if ((opcode & 0x00A1) != 0) {
+            } else if (trailingWord == 0xA1) {
                 return OP_KEY_NSKIP;
             }
         }
