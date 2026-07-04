@@ -117,6 +117,8 @@ void initVM(VM* vm) {
     memset(&vm->virtual_display,
             /* ch= */ 0,
             /* count= */ CHIP8_SCREEN_HEIGHT * CHIP8_SCREEN_WIDTH);
+
+    vm->keyboard_state = 0U;
 }
 
 void freeVM(VM* vm) {
@@ -129,6 +131,19 @@ bool loadROM(VM* vm, const BYTE* data, size_t size) {
     }
     memcpy(&vm->memory[0x200], data, size);
     return true;
+}
+
+bool setKeyState(VM* vm, BYTE keycode, bool isPressed) {
+    if (keycode > 0xF) {
+        return false;
+    }
+
+    vm->keyboard_state ^= ((isPressed ? 1 : 0) << keycode);
+    return true;
+}
+
+void clearKeyStates(VM* vm) {
+    vm->keyboard_state = 0;
 }
 
 StepStatus step(VM* vm) {
@@ -308,13 +323,17 @@ StepStatus step(VM* vm) {
         case OP_KEY_SKIP: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
             BYTE key = vm->registers[reg];
-            // TODO
+            if ((vm->keyboard_state & (1 << key)) != 0) {
+                vm->program_counter += 2;
+            }
             break;
         }
         case OP_KEY_NSKIP: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
             BYTE key = vm->registers[reg];
-            // TODO
+            if ((vm->keyboard_state & (1 << key)) == 0) {
+                vm->program_counter += 2;
+            }
             break;
         }
         case OP_GET_DELAY: {

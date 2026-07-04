@@ -23,8 +23,6 @@ static SDL_Renderer* renderer = NULL;
 static SDL_Palette* display_palette = NULL;
 static AppState* appstate = NULL;
 
-static bool next = false;
-
 static void initAppState(AppState* state, const char* romfile) {
     appstate = state;
 
@@ -41,12 +39,9 @@ static void freeAppState(AppState* state) {
 }
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
-    if (!next) {
-        return SDL_APP_CONTINUE;
-    }
+    VM* vm = &((AppState*)appstate)->vm;
 
-    // next = false;
-    if (step(&((AppState*)appstate)->vm) != STATUS_STEP_EXECUTED) {
+    if (step(vm) != STATUS_STEP_EXECUTED) {
         return SDL_APP_FAILURE;
     }
 
@@ -54,7 +49,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         VIRTUAL_SCREEN_WIDTH,
         VIRTUAL_SCREEN_HEIGHT,
         SDL_PIXELFORMAT_INDEX8,
-        &((AppState*)appstate)->vm.virtual_display,
+        &vm->virtual_display,
         VIRTUAL_SCREEN_WIDTH
     );
 
@@ -76,14 +71,78 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 }
 
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
+    VM* vm = &((AppState*)appstate)->vm;
     switch (event->type) {
         case SDL_EVENT_QUIT:
             return SDL_APP_SUCCESS;
+        case SDL_EVENT_KEY_UP:
         case SDL_EVENT_KEY_DOWN:
-            if (event->key.scancode == SDL_SCANCODE_ESCAPE) {
-                return SDL_APP_SUCCESS;
-            } else if (event->key.scancode == SDL_SCANCODE_N) {
-                next = true;
+            switch (event->key.scancode) {
+                case SDL_SCANCODE_ESCAPE: return SDL_APP_SUCCESS;
+                case SDL_SCANCODE_Q: {
+                    setKeyState(vm, 0x0, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_W: {
+                    setKeyState(vm, 0x1, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_E: {
+                    setKeyState(vm, 0x2, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_R: {
+                    setKeyState(vm, 0x3, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_A: {
+                    setKeyState(vm, 0x4, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_S: {
+                    setKeyState(vm, 0x5, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_D: {
+                    setKeyState(vm, 0x6, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_F: {
+                    setKeyState(vm, 0x7, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_U: {
+                    setKeyState(vm, 0x8, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_I: {
+                    setKeyState(vm, 0x9, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_O: {
+                    setKeyState(vm, 0xA, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_P: {
+                    setKeyState(vm, 0xB, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_H: {
+                    setKeyState(vm, 0xC, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_J: {
+                    setKeyState(vm, 0xD, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_K: {
+                    setKeyState(vm, 0xE, event->key.down);
+                    break;
+                }
+                case SDL_SCANCODE_L: {
+                    setKeyState(vm, 0xF, event->key.down);
+                    break;
+                }
             }
             break;
     }

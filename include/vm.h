@@ -16,6 +16,8 @@
 
 #define CHIP8_ADDRESS_SPACE 0x1000
 
+typedef bool(*AwaitKeyPressedFunc)(BYTE key);
+
 /**
  * Virtual machine implementation a fantasy console CHIP-8 created in 1977,
  * initially designed to ease game development for the COSMAC VIP kit computer.
@@ -45,6 +47,10 @@ typedef struct {
 
     // 64 (width) by 32 (height) pixels screen data.
     BYTE virtual_display[CHIP8_SCREEN_HEIGHT * CHIP8_SCREEN_WIDTH];
+
+    // The CHIP-8 interpreter will accept input from a 16-key keypad,
+    // with each key corresponding to a single unique hexadecimal digit.
+    uint16_t keyboard_state;
 } VM;
 
 /**
@@ -70,6 +76,34 @@ void freeVM(VM* vm);
  *          false otherwise.
  */
 bool loadROM(VM* vm, const BYTE* data, size_t size);
+
+/**
+ * Sets a state for the given keycode.
+ * 
+ * <p> There are 16 keycodes (corresponding to keys 1 to F) and the key can
+ * either be pressed or not.
+ * 
+ * <p> Keycodes are 0-indexed and should be within [0, 0xF] bytes interval.
+ * 
+ * <p> The layout of the 16-key keypad is as follows:
+ * ╔═══╦═══╦═══╦═══╗
+ * ║ 1 ║ 2 ║ 3 ║ C ║
+ * ╠═══╬═══╬═══╬═══╣
+ * ║ 4 ║ 5 ║ 6 ║ D ║
+ * ╠═══╬═══╬═══╬═══╣
+ * ║ 7 ║ 8 ║ 9 ║ E ║
+ * ╠═══╬═══╬═══╬═══╣
+ * ║ A ║ 0 ║ B ║ F ║
+ * ╚═══╩═══╩═══╩═══╝
+ * 
+ * @returns true if key status was changed successfully and false otherwise.
+ */
+bool setKeyState(VM* vm, BYTE keycode, bool isPressed);
+
+/**
+ * Clear key states for the given virtual machine.
+ */
+void clearKeyStates(VM* vm);
 
 /**
  * Current instruction execution status.
