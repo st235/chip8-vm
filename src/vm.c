@@ -350,7 +350,6 @@ StepStatus step(VM* vm) {
             uint8_t reg = (opcode & 0x0F00) >> 8;
             BYTE key = vm->registers[reg];
             if ((vm->keyboard_state & (1 << key)) == 0) {
-                printf("Skipping %X", key);
                 vm->program_counter += 2;
             }
             break;

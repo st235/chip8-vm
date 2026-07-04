@@ -12,10 +12,6 @@ add_library(chip8vm-core
 
 target_include_directories(chip8vm-core PUBLIC include)
 
-if(ENABLE_DEBUG)
-    target_compile_definitions(chip8vm-core PRIVATE _CHIP8_DEBUG)
-endif()
-
 include(FetchContent)
 FetchContent_Declare(
     SDL3
@@ -38,3 +34,9 @@ target_link_libraries(chip8vm PRIVATE
     SDL3::SDL3
     chip8vm-core
 )
+
+if(ENABLE_DEBUG)
+    message(STATUS "Enabling debug logging...")
+    target_compile_definitions(chip8vm-core PRIVATE _CHIP8_DEBUG)
+    target_compile_definitions(chip8vm PRIVATE _CHIP8_DEBUG)
+endif()

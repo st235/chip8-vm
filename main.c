@@ -171,6 +171,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char *argv[]) {
     SDL_SetAppMetadata("CHIP-8 Virtual Machine", "1.0", "com.github.st235.chip8vm");
 
     if (argc != 2) {
+        // Uses printf to avoid SDL logging prefix.
         printf("ROM was not provided. Usage: chip8vm rom.ch8\n");
         return SDL_APP_FAILURE;
     }
