@@ -16,6 +16,7 @@
 
 typedef struct {
     VM vm;
+    bool debug_step_over;
 } AppState;
 
 static SDL_Window* window = NULL;
@@ -32,6 +33,8 @@ static void initAppState(AppState* state, const char* romfile) {
     const BYTE* rom_data = readROM(romfile, &rom_size);
     loadROM(&state->vm, rom_data, rom_size);
     free((void*)rom_data);
+
+    state->debug_step_over = false;
 }
 
 static void freeAppState(AppState* state) {
@@ -40,6 +43,13 @@ static void freeAppState(AppState* state) {
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
     VM* vm = &((AppState*)appstate)->vm;
+
+#ifdef CHIP8_DEBUG_VM
+    if (!((AppState*)appstate)->debug_step_over) {
+        return SDL_APP_CONTINUE;
+    }
+    ((AppState*)appstate)->debug_step_over = false;
+#endif
 
     if (step(vm) != STATUS_STEP_EXECUTED) {
         return SDL_APP_FAILURE;
@@ -79,67 +89,75 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
         case SDL_EVENT_KEY_DOWN:
             switch (event->key.scancode) {
                 case SDL_SCANCODE_ESCAPE: return SDL_APP_SUCCESS;
-                case SDL_SCANCODE_Q: {
+#ifdef CHIP8_DEBUG_VM
+                case SDL_SCANCODE_N: {
+                    if (event->key.down) {
+                        ((AppState*)appstate)->debug_step_over = true;
+                    }
+                    break;
+                }
+#endif
+                case SDL_SCANCODE_1: {
                     setKeyState(vm, 0x0, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_W: {
+                case SDL_SCANCODE_2: {
                     setKeyState(vm, 0x1, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_E: {
+                case SDL_SCANCODE_3: {
                     setKeyState(vm, 0x2, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_R: {
+                case SDL_SCANCODE_4: {
                     setKeyState(vm, 0x3, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_A: {
+                case SDL_SCANCODE_Q: {
                     setKeyState(vm, 0x4, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_S: {
+                case SDL_SCANCODE_W: {
                     setKeyState(vm, 0x5, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_D: {
+                case SDL_SCANCODE_E: {
                     setKeyState(vm, 0x6, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_F: {
+                case SDL_SCANCODE_R: {
                     setKeyState(vm, 0x7, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_U: {
+                case SDL_SCANCODE_A: {
                     setKeyState(vm, 0x8, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_I: {
+                case SDL_SCANCODE_S: {
                     setKeyState(vm, 0x9, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_O: {
+                case SDL_SCANCODE_D: {
                     setKeyState(vm, 0xA, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_P: {
+                case SDL_SCANCODE_F: {
                     setKeyState(vm, 0xB, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_H: {
+                case SDL_SCANCODE_Z: {
                     setKeyState(vm, 0xC, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_J: {
+                case SDL_SCANCODE_X: {
                     setKeyState(vm, 0xD, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_K: {
+                case SDL_SCANCODE_C: {
                     setKeyState(vm, 0xE, event->key.down);
                     break;
                 }
-                case SDL_SCANCODE_L: {
+                case SDL_SCANCODE_V: {
                     setKeyState(vm, 0xF, event->key.down);
                     break;
                 }

@@ -154,14 +154,32 @@ StepStatus step(VM* vm) {
     }
 
     WORD opcode = readNextOpcode(&vm->memory[vm->program_counter]);
-    vm->program_counter += 2;
     OpcodeType type = getOpcodeType(opcode);
 
-    // printf("pc %x\nI %x\nopcode: %x\n", vm->program_counter - 2, vm->address_register, opcode);
-    // for (int i = 0; i < 16; i++) {
-    //     printf("v%x: %x ", i, vm->registers[i]);
-    // }
-    // printf("\n");
+#ifdef CHIP8_DEBUG_VM
+    printf("    PC: 0x%04X\n     I: 0x%04X\nOpcode: 0x%04X (%02d)\n Stack: ",
+           vm->program_counter,
+           vm->address_register,
+            opcode, type);
+    if (vm->stack_size) {
+        for (int i = 0; i < vm->stack_size; i++) {
+            if (i > 0) {
+                printf(" -> ");
+            }
+            printf("0x%04X", vm->stack[i]);
+        }
+    } else {
+        printf("<empty>");
+    }
+
+    printf("\nRegisters:\n");
+    for (int r = 0; r <= 0xF; r++) {
+        printf("V%X: %02X ", r, vm->registers[r]);
+    }
+    printf("\n\n");
+#endif
+
+    vm->program_counter += 2;
 
     switch (type) {
         case OP_CALL_ASSEMBLY: {
@@ -332,6 +350,7 @@ StepStatus step(VM* vm) {
             uint8_t reg = (opcode & 0x0F00) >> 8;
             BYTE key = vm->registers[reg];
             if ((vm->keyboard_state & (1 << key)) == 0) {
+                printf("Skipping %X", key);
                 vm->program_counter += 2;
             }
             break;

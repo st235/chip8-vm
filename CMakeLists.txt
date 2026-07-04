@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(CHIP-8_Virtual_Machine VERSION 0.1.0 LANGUAGES C)
 
+option(ENABLE_DEBUG "Enables debug logging." OFF)
+
 add_library(chip8vm-core
     src/opcodes.c
     src/rom.c
@@ -9,6 +11,10 @@ add_library(chip8vm-core
 )
 
 target_include_directories(chip8vm-core PUBLIC include)
+
+if(ENABLE_DEBUG)
+    target_compile_definitions(chip8vm-core PRIVATE _CHIP8_DEBUG)
+endif()
 
 include(FetchContent)
 FetchContent_Declare(
