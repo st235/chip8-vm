@@ -16,7 +16,6 @@
 
 typedef struct {
     VM vm;
-    BYTE* display_data;
 } AppState;
 
 static SDL_Window* window = NULL;
@@ -26,41 +25,8 @@ static AppState* appstate = NULL;
 
 static bool next = false;
 
-static void clearDisplay() {
-    memset(appstate->display_data, 0, VIRTUAL_SCREEN_WIDTH * VIRTUAL_SCREEN_HEIGHT);
-}
-
-static bool draw(BYTE x, BYTE y, BYTE* sprite, size_t height) {
-    uint8_t tx = (x + 8 < VIRTUAL_SCREEN_WIDTH) ? (x + 8) : VIRTUAL_SCREEN_WIDTH;
-    uint8_t ty = (y + height < VIRTUAL_SCREEN_HEIGHT) ? (y + height) : VIRTUAL_SCREEN_HEIGHT;
-    // printf("tx: %d, ty: %d\n", tx, ty);
-
-    bool flag = false;
-
-    for (uint8_t cx = 0; cx < 8; cx++) {
-        for (uint8_t cy = 0; cy < height; cy++) {
-            uint8_t sprite_value = sprite[cy] & (1 << (7 - cx));
-            
-            uint16_t display_index = (y + cy) * VIRTUAL_SCREEN_WIDTH + (x + cx);
-            uint8_t new_value = appstate->display_data[display_index] ^ sprite_value;
-
-            if (appstate->display_data[display_index] && !new_value) {
-                flag = true;
-            }
-
-            // printf("cx %d cy %d %x\n", cx, cy, new_value);
-
-            appstate->display_data[display_index] = new_value;
-        }
-    }
-
-    return flag;
-}
-
 static void initAppState(AppState* state, const char* romfile) {
     appstate = state;
-    state->display_data = SDL_malloc(VIRTUAL_SCREEN_WIDTH * VIRTUAL_SCREEN_HEIGHT);
-    memset(state->display_data, 0, VIRTUAL_SCREEN_WIDTH * VIRTUAL_SCREEN_HEIGHT);
 
     initVM(&state->vm);
 
@@ -68,14 +34,10 @@ static void initAppState(AppState* state, const char* romfile) {
     const BYTE* rom_data = readROM(romfile, &rom_size);
     loadROM(&state->vm, rom_data, rom_size);
     free((void*)rom_data);
-
-    registerClearDisplayFunc(&state->vm, clearDisplay);
-    registerDrawFunc(&state->vm, draw);
 }
 
 static void freeAppState(AppState* state) {
     freeVM(&state->vm);
-    SDL_free(state->display_data);
 }
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
@@ -92,7 +54,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         VIRTUAL_SCREEN_WIDTH,
         VIRTUAL_SCREEN_HEIGHT,
         SDL_PIXELFORMAT_INDEX8,
-        ((AppState*)appstate)->display_data,
+        &((AppState*)appstate)->vm.virtual_display,
         VIRTUAL_SCREEN_WIDTH
     );
 

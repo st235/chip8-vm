@@ -6,10 +6,15 @@
 
 #include "types.h"
 
-#define CHIP8_ADDRESS_SPACE 0x1000
+/**
+ * The CHIP-8 interpreter allows for graphics output onto a monochrome screen
+ * of 64 × 32 pixels. The top-left corner of the screen is assigned (x,y)
+ * coordinates of (0x00, 0x00), and the bottom-right is assigned (0x3F, 0x1F).
+ */
+#define CHIP8_SCREEN_WIDTH 64
+#define CHIP8_SCREEN_HEIGHT 32
 
-typedef void(*ClearDisplayFunc)();
-typedef bool(*DrawFunc)(BYTE x, BYTE y, BYTE* sprite, size_t size);
+#define CHIP8_ADDRESS_SPACE 0x1000
 
 /**
  * Virtual machine implementation a fantasy console CHIP-8 created in 1977,
@@ -38,8 +43,8 @@ typedef struct {
     // Address of a currently executed instruction.
     WORD program_counter;
 
-    ClearDisplayFunc clear_display_func;
-    DrawFunc draw_func;
+    // 64 (width) by 32 (height) pixels screen data.
+    BYTE virtual_display[CHIP8_SCREEN_HEIGHT * CHIP8_SCREEN_WIDTH];
 } VM;
 
 /**
@@ -65,9 +70,6 @@ void freeVM(VM* vm);
  *          false otherwise.
  */
 bool loadROM(VM* vm, const BYTE* data, size_t size);
-
-void registerClearDisplayFunc(VM* vm, ClearDisplayFunc func);
-void registerDrawFunc(VM* vm, DrawFunc func);
 
 /**
  * Current instruction execution status.

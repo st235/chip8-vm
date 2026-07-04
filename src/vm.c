@@ -78,6 +78,30 @@ static void executeOpCall(VM* vm, WORD opcode) {
     vm->program_counter = new_address;
 }
 
+static bool executeOpDraw(VM* vm, BYTE x, BYTE y, BYTE height) {
+    const BYTE* sprite = &vm->memory[vm->address_register];
+
+    // Set VF to 01 if any set pixels are changed to unset, and 00 otherwise.
+    bool was_unset = false;
+
+    for (uint8_t row = 0; row < height; row++) {
+        for (uint8_t column = 0; column < 8; column++) {
+            uint8_t sprite_value = sprite[row] & (1 << (7 - column));
+            
+            uint16_t display_index = (y + row) * CHIP8_SCREEN_WIDTH + (x + column);
+            BYTE new_value = vm->virtual_display[display_index] ^ sprite_value;
+
+            if (vm->virtual_display[display_index] && !new_value) {
+                was_unset = true;
+            }
+
+            vm->virtual_display[display_index] = new_value;
+        }
+    }
+
+    return was_unset;
+}
+
 void initVM(VM* vm) {
     srand(time(NULL));
     memset(vm->memory, 0, sizeof(vm->memory) / sizeof(BYTE));
@@ -90,20 +114,13 @@ void initVM(VM* vm) {
     vm->stack_size = 0U;
     vm->stack_capacity = STACK_INITIAL_SIZE;
 
-    vm->clear_display_func = NULL;
-    vm->draw_func = NULL;
+    memset(&vm->virtual_display,
+            /* ch= */ 0,
+            /* count= */ CHIP8_SCREEN_HEIGHT * CHIP8_SCREEN_WIDTH);
 }
 
 void freeVM(VM* vm) {
     free(vm->stack);
-}
-
-void registerClearDisplayFunc(VM* vm, ClearDisplayFunc func) {
-    vm->clear_display_func = func;
-}
-
-void registerDrawFunc(VM* vm, DrawFunc func) {
-    vm->draw_func = func;
 }
 
 bool loadROM(VM* vm, const BYTE* data, size_t size) {
@@ -136,9 +153,9 @@ StepStatus step(VM* vm) {
             return STATUS_UNSUPPORTED_INSTRUCTION;
         }
         case OP_CLEAR_DISPLAY: {
-            if (vm->clear_display_func != NULL) {
-                vm->clear_display_func();
-            }
+            memset(&vm->virtual_display,
+                   /* ch= */ 0,
+                   /* count= */ CHIP8_SCREEN_HEIGHT * CHIP8_SCREEN_WIDTH);
             break;
         }
         case OP_RETURN: {
@@ -281,8 +298,7 @@ StepStatus step(VM* vm) {
             uint8_t x = vm->registers[((opcode & 0x0F00) >> 8)];
             uint8_t y = vm->registers[((opcode & 0x00F0) >> 4)];
             uint8_t height = (opcode & 0x000F);
-            // printf("x %d y %d h %d\n", x, y, height);
-            if (vm->draw_func != NULL && vm->draw_func(x, y, &vm->memory[vm->address_register], height)) {
+            if (executeOpDraw(vm, x, y, height)) {
                 vm->registers[0xF] = 1;
             } else {
                 vm->registers[0xF] = 0;
