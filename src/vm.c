@@ -30,6 +30,33 @@ static BYTE kFont[16][5] = {
     {0xF0, 0x80, 0xF0, 0x80, 0xF0},
 };
 
+static bool pushReturnAddress(VM* vm, WORD address) {
+    if (vm->stack_size + 1 >= STACK_MAX_SIZE) {
+        return false;
+    }
+
+    if (vm->stack_size + 1 > vm->stack_capacity) {
+        WORD* old_stack = vm->stack;
+        vm->stack_capacity *= STACK_GROWTH_FACTOR;
+        vm->stack = realloc(old_stack, sizeof(WORD) * vm->stack_capacity);
+    }
+
+    vm->stack[vm->stack_size] = address;
+    vm->stack_size += 1;
+
+    return true;
+}
+
+static bool popReturnAddress(VM* vm, WORD* out_address) {
+    if (vm->stack_size == 0) {
+        return false;
+    }
+
+    *out_address = vm->stack[vm->stack_size - 1];
+    vm->stack_size -= 1;
+    return true;
+}
+
 static bool executeOpReturn(VM* vm) {
     WORD poped_address = 0;
     if (!popReturnAddress(vm, &poped_address)) {
@@ -79,48 +106,21 @@ void registerDrawFunc(VM* vm, DrawFunc func) {
     vm->draw_func = func;
 }
 
-bool pushReturnAddress(VM* vm, WORD address) {
-    if (vm->stack_size + 1 >= STACK_MAX_SIZE) {
+bool loadROM(VM* vm, const BYTE* data, size_t size) {
+    if (data == NULL || size > 0xE00) {
         return false;
     }
-
-    if (vm->stack_size + 1 > vm->stack_capacity) {
-        WORD* old_stack = vm->stack;
-        vm->stack_capacity *= STACK_GROWTH_FACTOR;
-        vm->stack = realloc(old_stack, sizeof(WORD) * vm->stack_capacity);
-    }
-
-    vm->stack[vm->stack_size] = address;
-    vm->stack_size += 1;
-
+    memcpy(&vm->memory[0x200], data, size);
     return true;
 }
 
-bool popReturnAddress(VM* vm, WORD* out_address) {
-    if (vm->stack_size == 0) {
-        return false;
+StepStatus step(VM* vm) {
+    if (vm->program_counter >= CHIP8_ADDRESS_SPACE) {
+        // We are most likely long outside of our allocated memory bounds,
+        // aborting.
+        return STATUS_OUT_OF_MEMORY_BOUNDS;
     }
 
-    *out_address = vm->stack[vm->stack_size - 1];
-    vm->stack_size -= 1;
-    return true;
-}
-
-bool loadROM(VM* vm, const char* filename) {
-    FILE* file = fopen(filename, "rb");
-    if (!file) {
-        return false;
-    }
-
-    if (!fread(&vm->memory[0x200], sizeof(BYTE), 0xE00, file) || ferror(file)) {
-        fclose(file);
-        return false;
-    }
-
-    return true;
-}
-
-RunStatus step(VM* vm) {
     WORD opcode = readNextOpcode(&vm->memory[vm->program_counter]);
     vm->program_counter += 2;
     OpcodeType type = getOpcodeType(opcode);
@@ -133,7 +133,7 @@ RunStatus step(VM* vm) {
 
     switch (type) {
         case OP_CALL_ASSEMBLY: {
-            return UNSUPPORTED_INSTRUCTION;
+            return STATUS_UNSUPPORTED_INSTRUCTION;
         }
         case OP_CLEAR_DISPLAY: {
             if (vm->clear_display_func != NULL) {
@@ -143,7 +143,7 @@ RunStatus step(VM* vm) {
         }
         case OP_RETURN: {
             if (!executeOpReturn(vm)) {
-                return RUNTIME_ERROR;
+                return STATUS_RUNTIME_ERROR;
             }
             break;
         }
@@ -353,20 +353,9 @@ RunStatus step(VM* vm) {
             break;
         }
         case OP_UNKNOWN: {
-            return UNKNOWN_INSTRUCTION;
+            return STATUS_UNKNOWN_INSTRUCTION;
         }
     }
 
-    return STEP;
-}
-
-RunStatus run(VM* vm) {
-    while (vm->program_counter < CHIP8_ADDRESS_SPACE) {
-        RunStatus status = step(vm);
-        if (status != STEP) {
-            return status;
-        }
-    }
-
-    return COMPLETED;
+    return STATUS_STEP_EXECUTED;
 }

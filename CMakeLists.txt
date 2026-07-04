@@ -4,6 +4,7 @@ project(CHIP-8_Virtual_Machine VERSION 0.1.0 LANGUAGES C)
 
 add_library(chip8vm-core
     src/opcodes.c
+    src/rom.c
     src/vm.c
 )
 

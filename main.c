@@ -1,12 +1,15 @@
 #define SDL_MAIN_USE_CALLBACKS
 
-#include <stdio.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
 #include "vm.h"
+#include "rom.h"
 
 #define VIRTUAL_SCREEN_WIDTH 64
 #define VIRTUAL_SCREEN_HEIGHT 32
@@ -60,7 +63,12 @@ static void initAppState(AppState* state, const char* romfile) {
     memset(state->display_data, 0, VIRTUAL_SCREEN_WIDTH * VIRTUAL_SCREEN_HEIGHT);
 
     initVM(&state->vm);
-    loadROM(&state->vm, romfile);
+
+    size_t rom_size = 0;
+    const BYTE* rom_data = readROM(romfile, &rom_size);
+    loadROM(&state->vm, rom_data, rom_size);
+    free((void*)rom_data);
+
     registerClearDisplayFunc(&state->vm, clearDisplay);
     registerDrawFunc(&state->vm, draw);
 }
@@ -76,7 +84,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     }
 
     // next = false;
-    if (step(&((AppState*)appstate)->vm) != STEP) {
+    if (step(&((AppState*)appstate)->vm) != STATUS_STEP_EXECUTED) {
         return SDL_APP_FAILURE;
     }
 
