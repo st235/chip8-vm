@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(CHIP-8_Virtual_Machine VERSION 0.1.0 LANGUAGES C)
+project(CHIP-8_Virtual_Machine VERSION 0.9.0 LANGUAGES C)
 
 option(ENABLE_DEBUG "Enables debug logging." OFF)
 
@@ -37,9 +37,12 @@ target_link_libraries(chip8vm PRIVATE
 
 if(ENABLE_DEBUG)
     message(STATUS "Enabling debug logging...")
-    target_compile_definitions(chip8vm-core PRIVATE _CHIP8_DEBUG)
-    target_compile_definitions(chip8vm PRIVATE _CHIP8_DEBUG)
+    target_compile_definitions(chip8vm-core PUBLIC _CHIP8_DEBUG)
 endif()
+
+target_compile_definitions(chip8vm PRIVATE
+    _CHIP8_VERSION="${CMAKE_PROJECT_VERSION}"
+)
 
 if(EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX .js)

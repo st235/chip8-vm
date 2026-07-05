@@ -118,6 +118,12 @@ void refreshPalette(const char* primary, const char* secondary) {
     SDL_SetPaletteColors(kAppState.palette, colors, 0, 2);
 }
 
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE const char* getVersion() {
+    return _CHIP8_VERSION;
+}
+#endif
+
 SDL_AppResult SDL_AppIterate(void* appstate) {
     AppState* state = (AppState*)appstate;
     VM* vm = &state->vm;

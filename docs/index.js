@@ -4,6 +4,7 @@ const canvasElement = document.getElementById("canvas");
 const uploadElement = document.getElementById("upload");
 const primaryColourElement = document.getElementById("primary-colour");
 const secondaryColourElement = document.getElementById("secondary-colour");
+const versionElement = document.getElementById("version");
 
 async function loadGame(nativeLoadGame, e) {
     const file = e.target.files[0];
@@ -32,9 +33,12 @@ var Module = {
         console.log("On runtime initialized.");
         const nativeLoadGame = Module.cwrap("loadGame", null, ["string"]);
         const nativeRefreshPalette = Module.cwrap("refreshPalette", null, ["string", "string"]);
+        const nativeGetVersion = Module.cwrap("getVersion", "string", []);
 
         uploadElement.onchange = (e) => loadGame(nativeLoadGame, e);
         primaryColourElement.onchange = (e) => refreshPalette(nativeRefreshPalette, e);
         secondaryColourElement.onchange = (e) => refreshPalette(nativeRefreshPalette, e);
+
+        versionElement.textContent = `v${nativeGetVersion()}`;
     },
 };

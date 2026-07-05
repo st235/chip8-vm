@@ -154,3 +154,11 @@ body {
 #upload {
     margin-bottom: 8px;
 }
+
+#version {
+    position: absolute;
+    font-size: 1.1em;
+    font-weight: 500;
+    right: 8px;
+    bottom: 8px;
+}
