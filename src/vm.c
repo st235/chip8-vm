@@ -10,7 +10,7 @@
 #define STACK_GROWTH_FACTOR 2
 #define STACK_INITIAL_SIZE 2
 #define STACK_MAX_SIZE 256
-#define TIMERS_UPDATE_INTERVAL_MS 17
+#define TIMERS_UPDATE_INTERVAL_MS 16
 
 static BYTE kFont[16][5] = {
     {0xF0, 0x90, 0x90, 0x90, 0xF0},
@@ -105,11 +105,12 @@ static bool executeOpDraw(VM* vm, BYTE x, BYTE y, BYTE height) {
 
 static void updateTimers(VM* vm, uint64_t time_ms) {
     uint64_t dt = time_ms - vm->last_timers_update_time_ms;
-    vm->last_timers_update_time_ms = time_ms;
 
     if (dt < TIMERS_UPDATE_INTERVAL_MS) {
         return;
     }
+
+    vm->last_timers_update_time_ms = time_ms;
 
     if (vm->delay_timer > 0) {
         vm->delay_timer--;
@@ -202,10 +203,11 @@ StepStatus step(VM* vm, uint64_t time_ms) {
     OpcodeType type = getOpcodeType(opcode);
 
 #ifdef CHIP8_DEBUG_VM
-    printf("    PC: 0x%04X\n     I: 0x%04X\nOpcode: 0x%04X (%02d)\n Stack: ",
+    printf("    PC: 0x%04X\n     I: 0x%04X\nOpcode: 0x%04X (%02d)\n Delay: %d\n Stack: ",
            vm->program_counter,
            vm->address_register,
-            opcode, type);
+           opcode, type,
+           vm->delay_timer);
     if (vm->stack_size) {
         for (int i = 0; i < vm->stack_size; i++) {
             if (i > 0) {
@@ -385,7 +387,7 @@ StepStatus step(VM* vm, uint64_t time_ms) {
         }
         case OP_KEY_SKIP: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
-            BYTE key = vm->registers[reg];
+            BYTE key = vm->registers[reg] - 1;
             if ((vm->keyboard_state & (1 << key)) != 0) {
                 vm->program_counter += 2;
             }
@@ -393,7 +395,7 @@ StepStatus step(VM* vm, uint64_t time_ms) {
         }
         case OP_KEY_NSKIP: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
-            BYTE key = vm->registers[reg];
+            BYTE key = vm->registers[reg] - 1;
             if ((vm->keyboard_state & (1 << key)) == 0) {
                 vm->program_counter += 2;
             }
@@ -407,17 +409,20 @@ StepStatus step(VM* vm, uint64_t time_ms) {
         case OP_AWAIT_KEY: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
 
-            bool key_pressed = false;
+            int8_t key_pressed = -1;
             for (uint8_t i = 0; i < 0xF; i++) {
                 if (vm->keyboard_state & (1 << i)) {
-                    key_pressed = true;
+                    key_pressed = (i + 1);
+                    break;
                 }
             }
 
-            if (!key_pressed) {
+            if (key_pressed == -1) {
                 // Key was not pressed this cycle, rewind back to AWAIT
                 // instruction.
                 vm->program_counter -= 2;
+            } else {
+                vm->registers[reg] = (BYTE)key_pressed;
             }
 
             break;

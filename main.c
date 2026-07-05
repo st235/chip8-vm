@@ -68,7 +68,6 @@ static SDL_Color hexToSdlColor(const char* colour) {
         if (length == 3) {
             uint8_t num = hexToDec(colour[i]);
             channel = num * 17;
-            printf("Channel %c %d %d", colour[i], num, channel);
         } else {
             uint8_t num1 = hexToDec(colour[i*2 + 0]);
             uint8_t num2 = hexToDec(colour[i*2 + 1]);
