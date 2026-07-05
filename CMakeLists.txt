@@ -40,3 +40,7 @@ if(ENABLE_DEBUG)
     target_compile_definitions(chip8vm-core PRIVATE _CHIP8_DEBUG)
     target_compile_definitions(chip8vm PRIVATE _CHIP8_DEBUG)
 endif()
+
+if(EMSCRIPTEN)
+  set(CMAKE_EXECUTABLE_SUFFIX .html)
+endif()

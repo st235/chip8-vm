@@ -5,29 +5,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL.h>
 
-#include "vm.h"
 #include "rom.h"
-
-#define VIRTUAL_SCREEN_WIDTH 64
-#define VIRTUAL_SCREEN_HEIGHT 32
+#include "vm.h"
 
 typedef struct {
     VM vm;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_Palette* palette;
     bool debug_step_over;
 } AppState;
 
-static SDL_Window* window = NULL;
-static SDL_Renderer* renderer = NULL;
-static SDL_Palette* display_palette = NULL;
-static AppState* appstate = NULL;
-
 static void initAppState(AppState* state, const char* romfile) {
-    appstate = state;
-
     initVM(&state->vm);
+
+    state->window = NULL;
+    state->renderer = NULL;
+    state->palette = NULL;
 
     size_t rom_size = 0;
     const BYTE* rom_data = readROM(romfile, &rom_size);
@@ -39,10 +36,14 @@ static void initAppState(AppState* state, const char* romfile) {
 
 static void freeAppState(AppState* state) {
     freeVM(&state->vm);
+    SDL_DestroyPalette(state->palette);
+    SDL_DestroyRenderer(state->renderer);
+    SDL_DestroyWindow(state->window);
 }
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
-    VM* vm = &((AppState*)appstate)->vm;
+    AppState* state = (AppState*)appstate;
+    VM* vm = &state->vm;
 
 #ifdef CHIP8_DEBUG_VM
     if (!((AppState*)appstate)->debug_step_over) {
@@ -56,27 +57,27 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     }
 
     SDL_Surface* surface = SDL_CreateSurfaceFrom(
-        VIRTUAL_SCREEN_WIDTH,
-        VIRTUAL_SCREEN_HEIGHT,
+        CHIP8_SCREEN_WIDTH,
+        CHIP8_SCREEN_HEIGHT,
         SDL_PIXELFORMAT_INDEX8,
         &vm->virtual_display,
-        VIRTUAL_SCREEN_WIDTH
+        CHIP8_SCREEN_WIDTH
     );
 
-    SDL_RenderClear(renderer);
+    SDL_RenderClear(state->renderer);
 
-    SDL_SetSurfacePalette(surface, display_palette);
+    SDL_SetSurfacePalette(surface, state->palette);
 
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(state->renderer, surface);
 
     SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
 
-    SDL_RenderTexture(renderer, texture, NULL, NULL);
+    SDL_RenderTexture(state->renderer, texture, NULL, NULL);
 
     SDL_DestroySurface(surface);
     SDL_DestroyTexture(texture);
 
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(state->renderer);
     return SDL_APP_CONTINUE;
 }
 
@@ -170,32 +171,37 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char *argv[]) {
     SDL_SetAppMetadata("CHIP-8 Virtual Machine", "1.0", "com.github.st235.chip8vm");
 
+    AppState* state = SDL_malloc(sizeof(AppState));
+    initAppState(state, argv[1]);
+
+    *appstate = state;
+
+#ifndef __EMSCRIPTEN__
     if (argc != 2) {
         // Uses printf to avoid SDL logging prefix.
         printf("ROM was not provided. Usage: chip8vm rom.ch8\n");
         return SDL_APP_FAILURE;
     }
+#endif
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("SDL_Init(SDL_INIT_VIDEO) failed: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
-    if (!SDL_CreateWindowAndRenderer(argv[1], 640, 320, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
+    if (!SDL_CreateWindowAndRenderer(argv[1], 640, 320, SDL_WINDOW_RESIZABLE,
+            &state->window, &state->renderer)) {
         SDL_Log("SDL_CreateWindowAndRenderer() failed: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
-    display_palette = SDL_CreatePalette(256);
+    state->palette = SDL_CreatePalette(256);
 
     SDL_Color colors[2] = {
-        {0,   0,   0,   255}, // index 0 = black
-        {255, 255, 255, 255}  // index 1 = white
+        {  0,   0,   0, 255},
+        {255, 255, 255, 255},
     };
-    SDL_SetPaletteColors(display_palette, colors, 0, 2);
-
-    *appstate = SDL_malloc(sizeof(AppState));
-    initAppState(*appstate, argv[1]);
+    SDL_SetPaletteColors(state->palette, colors, 0, 2);
 
     return SDL_APP_CONTINUE;
 }
@@ -203,8 +209,5 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char *argv[]) {
 void SDL_AppQuit(void* appstate, SDL_AppResult result) {
     freeAppState(appstate);
     SDL_free(appstate);
-    SDL_DestroyPalette(display_palette);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
     SDL_Quit();
 }

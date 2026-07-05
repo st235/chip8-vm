@@ -1,10 +1,13 @@
 # Build
 **/out
 **/out-*
+**/out_*
 **/temp
-**/temp-
+**/temp-*
+**/temp_*
 **/build
 **/build-*
+**/build_*
 
 # Prerequisites
 *.d
