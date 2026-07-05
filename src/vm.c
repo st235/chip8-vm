@@ -361,7 +361,20 @@ StepStatus step(VM* vm) {
         }
         case OP_AWAIT_KEY: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
-            // TODO
+
+            bool key_pressed = false;
+            for (uint8_t i = 0; i < 0xF; i++) {
+                if (vm->keyboard_state & (1 << i)) {
+                    key_pressed = true;
+                }
+            }
+
+            if (!key_pressed) {
+                // Key was not pressed this cycle, rewind back to AWAIT
+                // instruction.
+                vm->program_counter -= 2;
+            }
+
             break;
         }
         case OP_SET_DELAY: {

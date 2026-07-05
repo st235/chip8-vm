@@ -16,8 +16,6 @@
 
 #define CHIP8_ADDRESS_SPACE 0x1000
 
-typedef bool(*AwaitKeyPressedFunc)(BYTE key);
-
 /**
  * Virtual machine implementation a fantasy console CHIP-8 created in 1977,
  * initially designed to ease game development for the COSMAC VIP kit computer.
