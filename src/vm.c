@@ -179,7 +179,9 @@ bool setKeyState(VM* vm, BYTE keycode, bool isPressed) {
         return false;
     }
 
-    vm->keyboard_state ^= ((isPressed ? 1 : 0) << keycode);
+    uint8_t key_state = isPressed ? 1U : 0U;
+    vm->keyboard_state &= ~(1 << keycode);
+    vm->keyboard_state |= (isPressed << keycode);
     return true;
 }
 
