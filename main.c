@@ -5,6 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL.h>
 
@@ -16,23 +20,20 @@ typedef struct {
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_Palette* palette;
+    bool is_rom_loaded;
     bool debug_step_over;
 } AppState;
 
-AppState kAppState;
+static AppState kAppState;
 
-static void initAppState(AppState* state, const char* romfile) {
+static void initAppState(AppState* state) {
     initVM(&state->vm);
 
     state->window = NULL;
     state->renderer = NULL;
     state->palette = NULL;
 
-    size_t rom_size = 0;
-    const BYTE* rom_data = readROM(romfile, &rom_size);
-    loadROM(&state->vm, rom_data, rom_size);
-    free((void*)rom_data);
-
+    state->is_rom_loaded = false;
     state->debug_step_over = false;
 }
 
@@ -43,9 +44,24 @@ static void freeAppState(AppState* state) {
     SDL_DestroyWindow(state->window);
 }
 
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+void loadGame(const char* romfile) {
+    size_t rom_size = 0;
+    const BYTE* rom_data = readROM(romfile, &rom_size);
+    loadROM(&kAppState.vm, rom_data, rom_size);
+    free((void*)rom_data);
+    kAppState.is_rom_loaded = true;
+}
+
 SDL_AppResult SDL_AppIterate(void* appstate) {
     AppState* state = (AppState*)appstate;
     VM* vm = &state->vm;
+
+    if (!state->is_rom_loaded) {
+        return SDL_APP_CONTINUE;
+    }
 
 #ifdef CHIP8_DEBUG_VM
     if (!((AppState*)appstate)->debug_step_over) {
@@ -173,7 +189,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char *argv[]) {
     SDL_SetAppMetadata("CHIP-8 Virtual Machine", "1.0", "com.github.st235.chip8vm");
 
-    initAppState(&kAppState, argv[1]);
+    initAppState(&kAppState);
     *appstate = &kAppState;
 
 #ifndef __EMSCRIPTEN__
@@ -182,8 +198,10 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char *argv[]) {
         printf("ROM was not provided. Usage: chip8vm rom.ch8\n");
         return SDL_APP_FAILURE;
     }
+
+    loadGame(argv[1]);
 #else
-    printf("EMSCRIPTEN started, upload ")
+    printf("EMSCRIPTEN started, upload game on the webpage.\n");
 #endif
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {

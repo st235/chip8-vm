@@ -42,5 +42,9 @@ if(ENABLE_DEBUG)
 endif()
 
 if(EMSCRIPTEN)
-  set(CMAKE_EXECUTABLE_SUFFIX .html)
+    set(CMAKE_EXECUTABLE_SUFFIX .js)
+    set_target_properties(chip8vm PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/web"
+        LINK_FLAGS "-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS'] -s USE_SDL=3"
+    )
 endif()

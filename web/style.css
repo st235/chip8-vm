@@ -1,0 +1,138 @@
+@font-face {
+    font-family: "SN Pro";
+    src: url("./font/SNPro-VariableFont_wght.ttf") format("truetype");
+}
+
+* {
+    font-family: "SN Pro" !important;
+}
+
+body {
+    --background-color: #ECECEC;
+    --on-background-color: #999999;
+    --primary-text: #0E0E0E;
+    --secondary-text: #555555;
+    --border-color: #c5c5c5;
+
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--background-color);
+
+    display: flex;
+    flex-direction: row;
+
+    overflow: hidden;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+
+    padding: 16px;
+
+    justify-content: center;
+
+    flex: 2;
+}
+
+.sidebar h2 {
+    margin: 0;
+    color: var(--primary-text);
+}
+
+.sidebar .description {
+    text-align: justify;
+    color: var(--secondary-text);
+}
+
+.mapping-explained {
+
+}
+
+.mapping-explained .keyboard-mapping {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+.mapping-explained .keyboard-mapping table {
+    border: 2px solid var(--border-color);
+    border-collapse: collapse;
+
+    th, td {
+        text-align: center;
+        font-size: 0.8em;
+        border: 2px solid var(--border-color);
+    }
+}
+
+.mapping-explained .keyboard-mapping table * .footer {
+    padding: 4px;
+}
+
+.playground {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.playground input {
+    margin-top: 8px;
+}
+
+.subtitle {
+    font-size: 0.95em;
+    font-weight: 500;
+    color: var(--secondary-text);
+    margin: 0;
+    margin-top: 4px;
+}
+
+.subtitle img {
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
+}
+
+.subdescription {
+    font-size: 0.9em;
+    color: var(--secondary-text);
+    margin: 0;
+    font-style: italic;
+    text-align: justify;
+    margin-top: 4px;
+}
+
+.sidebar footer {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar footer div {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+
+.sidebar footer div .icon {
+    width: 16px;
+    height: 16px;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+#canvas {
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    image-rendering: -webkit-optimize-contrast; /* webkit */
+    image-rendering: -moz-crisp-edges; /* Firefox */
+    background-color: var(--on-background-color);
+}

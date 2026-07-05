@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CHIP-8 Virtual Machine</title>
+    <link rel="stylesheet" href="style.css"></link>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>CHIP-8 Virtual machine</h2>
+        <p class="description">Created in 1977, CHIP-8 is the original fantasy console. Initially designed to ease game development for the COSMAC VIP kit computer, it has enjoyed several revivals over the decades for new and exciting platforms. Today, creating a CHIP-8 implementation is a rite of passage for anyone interested in learning about emulation.</p>
+        <div class="mapping-explained">
+            <p class="subtitle">Mapping</p>
+            <p class="subdescription">Original CHIP-8 machine had 16 digits numpad. While this is a nice invention modern keyboards usually employ a different layout, hence the virtual machine introduces a mapping demonstrated below.</p>
+            <div class="keyboard-mapping">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>C</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>6</td>
+                            <td>D</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>8</td>
+                            <td>9</td>
+                            <td>E</td>
+                        </tr>
+                        <tr>
+                            <td>A</td>
+                            <td>0</td>
+                            <td>B</td>
+                            <td>F</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="footer">Original CHIP-8 keyboard layout</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <img src="./icons/arrow-right-circle-fill.svg" />
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                        </tr>
+                        <tr>
+                            <td>Q</td>
+                            <td>W</td>
+                            <td>E</td>
+                            <td>R</td>
+                        </tr>
+                        <tr>
+                            <td>A</td>
+                            <td>S</td>
+                            <td>D</td>
+                            <td>F</td>
+                        </tr>
+                        <tr>
+                            <td>Z</td>
+                            <td>X</td>
+                            <td>C</td>
+                            <td>V</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="footer">Mapped keyboard layout</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <footer>
+            <p class="subtitle">Resouces</p>
+            <div><img src="./icons/c8.png" class="icon" /><a href="https://chip-8.github.io/links/">Awesome CHIP-8</a></div>
+            <div><img src="./icons/wiki.svg" class="icon" /><a href="https://en.wikipedia.org/wiki/CHIP-8">CHIP-8 on WikipediA</a></div>
+        </footer>
+    </div>
+    <div class="playground">
+        <canvas id="canvas"></canvas>
+
+        <label class="subtitle" for="upload"><img src="./icons/floppy2-fill.svg"/>Select CHIP-8 ROM</label>
+        <input type="file" id="upload" accept=".ch8" />
+    </div>
+    <script type="text/javascript" src="index.js"></script>
+    <script async type="text/javascript" src="chip8vm.js"></script>
+</body>
+</html>
