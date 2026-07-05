@@ -19,6 +19,8 @@ typedef struct {
     bool debug_step_over;
 } AppState;
 
+AppState kAppState;
+
 static void initAppState(AppState* state, const char* romfile) {
     initVM(&state->vm);
 
@@ -171,10 +173,8 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char *argv[]) {
     SDL_SetAppMetadata("CHIP-8 Virtual Machine", "1.0", "com.github.st235.chip8vm");
 
-    AppState* state = SDL_malloc(sizeof(AppState));
-    initAppState(state, argv[1]);
-
-    *appstate = state;
+    initAppState(&kAppState, argv[1]);
+    *appstate = &kAppState;
 
 #ifndef __EMSCRIPTEN__
     if (argc != 2) {
@@ -182,6 +182,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char *argv[]) {
         printf("ROM was not provided. Usage: chip8vm rom.ch8\n");
         return SDL_APP_FAILURE;
     }
+#else
+    printf("EMSCRIPTEN started, upload ")
 #endif
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -190,24 +192,23 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char *argv[]) {
     }
 
     if (!SDL_CreateWindowAndRenderer(argv[1], 640, 320, SDL_WINDOW_RESIZABLE,
-            &state->window, &state->renderer)) {
+            &kAppState.window, &kAppState.renderer)) {
         SDL_Log("SDL_CreateWindowAndRenderer() failed: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 
-    state->palette = SDL_CreatePalette(256);
+    kAppState.palette = SDL_CreatePalette(256);
 
     SDL_Color colors[2] = {
         {  0,   0,   0, 255},
         {255, 255, 255, 255},
     };
-    SDL_SetPaletteColors(state->palette, colors, 0, 2);
+    SDL_SetPaletteColors(kAppState.palette, colors, 0, 2);
 
     return SDL_APP_CONTINUE;
 }
 
 void SDL_AppQuit(void* appstate, SDL_AppResult result) {
     freeAppState(appstate);
-    SDL_free(appstate);
     SDL_Quit();
 }

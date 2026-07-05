@@ -124,17 +124,13 @@ static void updateTimers(VM* vm, uint64_t time_ms) {
     }
 }
 
-void initVM(VM* vm) {
-    srand(time(NULL));
-    memset(vm->memory, 0, sizeof(vm->memory) / sizeof(BYTE));
-    memcpy(vm->memory, kFont, sizeof(kFont) / sizeof(BYTE));
-
+static void resetVM(VM* vm) {
     memset(vm->registers, 0, sizeof(vm->registers) / sizeof(BYTE));
-    vm->program_counter = 0U;
+
+    vm->address_register = 0U;
     vm->program_counter = 0x200;
-    vm->stack = malloc(sizeof(WORD) * STACK_INITIAL_SIZE);
+
     vm->stack_size = 0U;
-    vm->stack_capacity = STACK_INITIAL_SIZE;
 
     memset(&vm->virtual_display,
             /* ch= */ 0,
@@ -148,6 +144,18 @@ void initVM(VM* vm) {
     vm->on_beep_func = NULL;
 }
 
+void initVM(VM* vm) {
+    srand(time(NULL));
+    memset(vm->memory, 0, sizeof(vm->memory) / sizeof(BYTE));
+    memcpy(vm->memory, kFont, sizeof(kFont) / sizeof(BYTE));
+
+    vm->stack = malloc(sizeof(WORD) * STACK_INITIAL_SIZE);
+    vm->stack_size = 0U;
+    vm->stack_capacity = STACK_INITIAL_SIZE;
+
+    resetVM(vm);
+}
+
 void freeVM(VM* vm) {
     free(vm->stack);
 }
@@ -156,7 +164,13 @@ bool loadROM(VM* vm, const BYTE* data, size_t size) {
     if (data == NULL || size > 0xE00) {
         return false;
     }
+
+    // Loading ROM in memory.
     memcpy(&vm->memory[0x200], data, size);
+
+    // Resetting VM state.
+    resetVM(vm);
+
     return true;
 }
 
