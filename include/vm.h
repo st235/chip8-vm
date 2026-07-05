@@ -17,6 +17,11 @@
 #define CHIP8_ADDRESS_SPACE 0x1000
 
 /**
+ * Ticks in milliseconds required to keep internal timers updated.
+ */
+typedef uint64_t delta_time_t;
+
+/**
  * Virtual machine implementation a fantasy console CHIP-8 created in 1977,
  * initially designed to ease game development for the COSMAC VIP kit computer.
  */
@@ -49,6 +54,15 @@ typedef struct {
     // The CHIP-8 interpreter will accept input from a 16-key keypad,
     // with each key corresponding to a single unique hexadecimal digit.
     uint16_t keyboard_state;
+
+    // The sound timer provides CHIP-8's only facility for sound output.
+    // While the sound timer's value is non-zero, a tone will be emitted from
+    // the system's speaker.
+    BYTE sound_timer;
+
+    // When a timer is set to a non-zero value, it will count down at a
+    // rate of sixty hertz until zero is reached.
+    BYTE delay_timer;
 } VM;
 
 /**

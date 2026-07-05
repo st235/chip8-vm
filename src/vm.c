@@ -108,7 +108,7 @@ void initVM(VM* vm) {
     memcpy(vm->memory, kFont, sizeof(kFont) / sizeof(BYTE));
 
     memset(vm->registers, 0, sizeof(vm->registers) / sizeof(BYTE));
-    vm->program_counter = 0;
+    vm->program_counter = 0U;
     vm->program_counter = 0x200;
     vm->stack = malloc(sizeof(WORD) * STACK_INITIAL_SIZE);
     vm->stack_size = 0U;
@@ -119,6 +119,9 @@ void initVM(VM* vm) {
             /* count= */ CHIP8_SCREEN_HEIGHT * CHIP8_SCREEN_WIDTH);
 
     vm->keyboard_state = 0U;
+
+    vm->sound_timer = 0U;
+    vm->delay_timer = 0U;
 }
 
 void freeVM(VM* vm) {
