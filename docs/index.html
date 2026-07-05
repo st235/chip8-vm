@@ -89,6 +89,9 @@
 
         <label class="subtitle" for="upload"><img src="./icons/floppy2-fill.svg"/>Select CHIP-8 ROM</label>
         <input type="file" id="upload" accept=".ch8" />
+        <label class="subtitle" for="upload"><img src="./icons/palette.svg"/>Palette</label>
+        <div class="color-input"><input type="color" id="primary-colour" value="#000" /><span>Primary colour (background)</span></div>
+        <div class="color-input"><input type="color" id="secondary-colour" value="#fff" /><span>Secondary colour (foreground)</span></div>
     </div>
     <script type="text/javascript" src="index.js"></script>
     <script async type="text/javascript" src="chip8vm.js"></script>

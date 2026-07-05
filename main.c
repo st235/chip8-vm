@@ -1,9 +1,11 @@
 #define SDL_MAIN_USE_CALLBACKS
 
+#include <ctype.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -44,6 +46,50 @@ static void freeAppState(AppState* state) {
     SDL_DestroyWindow(state->window);
 }
 
+static int hexToDec(char hex) {
+    char lhex = tolower(hex);
+    if (isdigit(lhex)) {
+        return lhex - '0';
+    }
+    return lhex - 'a' + 10;
+}
+
+static SDL_Color hexToSdlColor(const char* colour) {
+    SDL_Color sdl_colour;
+    sdl_colour.a = 255;
+
+    size_t length = strlen(colour);
+    if (length != 3 && length != 6) {
+        return sdl_colour;
+    }
+
+    for (size_t i = 0; i < 3; i++) {
+        uint8_t channel = 0;
+        if (length == 3) {
+            uint8_t num = hexToDec(colour[i]);
+            channel = num * 17;
+            printf("Channel %c %d %d", colour[i], num, channel);
+        } else {
+            uint8_t num1 = hexToDec(colour[i*2 + 0]);
+            uint8_t num2 = hexToDec(colour[i*2 + 1]);
+            channel = num1 * 16 + num2;
+        }
+
+        switch (i) {
+        case 0:
+            sdl_colour.r = channel;
+            break;
+        case 1:
+            sdl_colour.g = channel;
+            break;
+        case 2:
+            sdl_colour.b = channel;
+            break;
+        }
+    }
+    return sdl_colour;
+}
+
 #ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
 #endif
@@ -53,6 +99,24 @@ void loadGame(const char* romfile) {
     loadROM(&kAppState.vm, rom_data, rom_size);
     free((void*)rom_data);
     kAppState.is_rom_loaded = true;
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+void refreshPalette(const char* primary, const char* secondary) {
+    if (kAppState.palette != NULL) {
+        SDL_DestroyPalette(kAppState.palette);
+    }
+
+    kAppState.palette = SDL_CreatePalette(256);
+
+    SDL_Color colors[2] = {
+        hexToSdlColor(primary),
+        hexToSdlColor(secondary),
+    };
+
+    SDL_SetPaletteColors(kAppState.palette, colors, 0, 2);
 }
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
@@ -215,13 +279,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char *argv[]) {
         return SDL_APP_FAILURE;
     }
 
-    kAppState.palette = SDL_CreatePalette(256);
-
-    SDL_Color colors[2] = {
-        {  0,   0,   0, 255},
-        {255, 255, 255, 255},
-    };
-    SDL_SetPaletteColors(kAppState.palette, colors, 0, 2);
+    refreshPalette("000", "FFF");
 
     return SDL_APP_CONTINUE;
 }

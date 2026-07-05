@@ -87,7 +87,7 @@ static bool executeOpDraw(VM* vm, BYTE x, BYTE y, BYTE height) {
 
     for (uint8_t row = 0; row < height; row++) {
         for (uint8_t column = 0; column < 8; column++) {
-            uint8_t sprite_value = sprite[row] & (1 << (7 - column));
+            uint8_t sprite_value = (sprite[row] & (1 << (7 - column))) == 0 ? 0 : 1;
             
             uint16_t display_index = (y + row) * CHIP8_SCREEN_WIDTH + (x + column);
             BYTE new_value = vm->virtual_display[display_index] ^ sprite_value;

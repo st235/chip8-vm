@@ -89,6 +89,7 @@ body {
     color: var(--secondary-text);
     margin: 0;
     margin-top: 4px;
+    margin-bottom: 4px;
 }
 
 .subtitle img {
@@ -129,10 +130,31 @@ body {
     margin-right: 4px;
 }
 
+.color-input {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 4px;
+    margin-bottom: 4px;
+
+    & input {
+        margin: 0;
+    }
+
+    & span {
+        margin-left: 8px;
+        font-size: 0.85em;
+    }
+}
+
 #canvas {
     width: 100%;
     aspect-ratio: 2 / 1;
     image-rendering: -webkit-optimize-contrast; /* webkit */
     image-rendering: -moz-crisp-edges; /* Firefox */
     background-color: var(--on-background-color);
+}
+
+#upload {
+    margin-bottom: 8px;
 }

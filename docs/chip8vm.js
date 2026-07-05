@@ -8646,6 +8646,7 @@ var ASM_CONSTS = {
 };
 
 // Imports from the Wasm binary.
+var _refreshPalette = Module['_refreshPalette'] = makeInvalidEarlyAccess('_refreshPalette');
 var _main = Module['_main'] = makeInvalidEarlyAccess('_main');
 var _loadGame = Module['_loadGame'] = makeInvalidEarlyAccess('_loadGame');
 var _SDL_free = Module['_SDL_free'] = makeInvalidEarlyAccess('_SDL_free');
@@ -8683,6 +8684,7 @@ var wasmMemory = makeInvalidEarlyAccess('wasmMemory');
 var wasmTable = makeInvalidEarlyAccess('wasmTable');
 
 function assignWasmExports(wasmExports) {
+  assert(typeof wasmExports['refreshPalette'] != 'undefined', 'missing Wasm export: refreshPalette');
   assert(typeof wasmExports['__main_argc_argv'] != 'undefined', 'missing Wasm export: __main_argc_argv');
   assert(typeof wasmExports['loadGame'] != 'undefined', 'missing Wasm export: loadGame');
   assert(typeof wasmExports['SDL_free'] != 'undefined', 'missing Wasm export: SDL_free');
@@ -8716,6 +8718,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['emscripten_stack_get_current'] != 'undefined', 'missing Wasm export: emscripten_stack_get_current');
   assert(typeof wasmExports['memory'] != 'undefined', 'missing Wasm export: memory');
   assert(typeof wasmExports['__indirect_function_table'] != 'undefined', 'missing Wasm export: __indirect_function_table');
+  _refreshPalette = Module['_refreshPalette'] = createExportWrapper('refreshPalette', 2);
   _main = Module['_main'] = createExportWrapper('__main_argc_argv', 2);
   _loadGame = Module['_loadGame'] = createExportWrapper('loadGame', 1);
   _SDL_free = Module['_SDL_free'] = createExportWrapper('SDL_free', 1);
