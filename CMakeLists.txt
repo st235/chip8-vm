@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(CHIP-8_Virtual_Machine VERSION 0.9.0 LANGUAGES C)
+project(CHIP-8_Virtual_Machine VERSION 0.9.1 LANGUAGES C)
 
 option(ENABLE_DEBUG "Enables debug logging." OFF)
 

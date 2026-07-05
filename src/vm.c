@@ -87,6 +87,10 @@ static bool executeOpDraw(VM* vm, BYTE x, BYTE y, BYTE height) {
 
     for (uint8_t row = 0; row < height; row++) {
         for (uint8_t column = 0; column < 8; column++) {
+            if ((y + row) >= CHIP8_SCREEN_HEIGHT || (x + column) >= CHIP8_SCREEN_WIDTH) {
+                continue;
+            }
+
             uint8_t sprite_value = (sprite[row] & (1 << (7 - column))) == 0 ? 0 : 1;
             
             uint16_t display_index = (y + row) * CHIP8_SCREEN_WIDTH + (x + column);
@@ -387,7 +391,7 @@ StepStatus step(VM* vm, uint64_t time_ms) {
         }
         case OP_KEY_SKIP: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
-            BYTE key = vm->registers[reg] - 1;
+            BYTE key = vm->registers[reg];
             if ((vm->keyboard_state & (1 << key)) != 0) {
                 vm->program_counter += 2;
             }
@@ -395,7 +399,7 @@ StepStatus step(VM* vm, uint64_t time_ms) {
         }
         case OP_KEY_NSKIP: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
-            BYTE key = vm->registers[reg] - 1;
+            BYTE key = vm->registers[reg];
             if ((vm->keyboard_state & (1 << key)) == 0) {
                 vm->program_counter += 2;
             }
@@ -412,7 +416,7 @@ StepStatus step(VM* vm, uint64_t time_ms) {
             int8_t key_pressed = -1;
             for (uint8_t i = 0; i < 0xF; i++) {
                 if (vm->keyboard_state & (1 << i)) {
-                    key_pressed = (i + 1);
+                    key_pressed = i;
                     break;
                 }
             }
