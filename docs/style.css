@@ -45,10 +45,6 @@ body {
     color: var(--secondary-text);
 }
 
-.mapping-explained {
-
-}
-
 .mapping-explained .keyboard-mapping {
     display: flex;
     flex-direction: row;
