@@ -17,9 +17,13 @@
 #define CHIP8_ADDRESS_SPACE 0x1000
 
 /**
- * Ticks in milliseconds required to keep internal timers updated.
+ * Triggers when VM needs to play a sound effect.
+ * The frequency and waveform of this tone are unspecified.
+ * As noted in the COSMAC VIP manual, the minimum value that the timer will
+ * respond to is 0x02. Thus, setting the timer to a value of 0x01 will have no
+ * audible effect.
  */
-typedef uint64_t delta_time_t;
+typedef void(*OnBeepFunc)();
 
 /**
  * Virtual machine implementation a fantasy console CHIP-8 created in 1977,
@@ -55,6 +59,9 @@ typedef struct {
     // with each key corresponding to a single unique hexadecimal digit.
     uint16_t keyboard_state;
 
+    // Last known timestamp when timers have been updated.
+    uint64_t last_timers_update_time_ms;
+
     // The sound timer provides CHIP-8's only facility for sound output.
     // While the sound timer's value is non-zero, a tone will be emitted from
     // the system's speaker.
@@ -63,6 +70,9 @@ typedef struct {
     // When a timer is set to a non-zero value, it will count down at a
     // rate of sixty hertz until zero is reached.
     BYTE delay_timer;
+
+    // Sound effect callback.
+    OnBeepFunc on_beep_func;
 } VM;
 
 /**
@@ -156,6 +166,6 @@ typedef enum {
  * 
  * @returns StepStatus as an operation status code.
  */
-StepStatus step(VM* vm);
+StepStatus step(VM* vm, uint64_t time_ms);
 
 #endif  // CHIP8VM_VM_H_

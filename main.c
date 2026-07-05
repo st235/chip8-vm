@@ -51,7 +51,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     ((AppState*)appstate)->debug_step_over = false;
 #endif
 
-    if (step(vm) != STATUS_STEP_EXECUTED) {
+    if (step(vm, SDL_GetTicks()) != STATUS_STEP_EXECUTED) {
         return SDL_APP_FAILURE;
     }
 

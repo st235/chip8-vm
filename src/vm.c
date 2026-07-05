@@ -10,6 +10,7 @@
 #define STACK_GROWTH_FACTOR 2
 #define STACK_INITIAL_SIZE 2
 #define STACK_MAX_SIZE 256
+#define TIMERS_UPDATE_INTERVAL_MS 17
 
 static BYTE kFont[16][5] = {
     {0xF0, 0x90, 0x90, 0x90, 0xF0},
@@ -102,6 +103,27 @@ static bool executeOpDraw(VM* vm, BYTE x, BYTE y, BYTE height) {
     return was_unset;
 }
 
+static void updateTimers(VM* vm, uint64_t time_ms) {
+    uint64_t dt = time_ms - vm->last_timers_update_time_ms;
+    vm->last_timers_update_time_ms = time_ms;
+
+    if (dt < TIMERS_UPDATE_INTERVAL_MS) {
+        return;
+    }
+
+    if (vm->delay_timer > 0) {
+        vm->delay_timer--;
+    }
+
+    if (vm->sound_timer > 0) {
+        OnBeepFunc func = vm->on_beep_func;
+        if (func != NULL) {
+            func();
+        }
+        vm->sound_timer--;
+    }
+}
+
 void initVM(VM* vm) {
     srand(time(NULL));
     memset(vm->memory, 0, sizeof(vm->memory) / sizeof(BYTE));
@@ -120,8 +142,10 @@ void initVM(VM* vm) {
 
     vm->keyboard_state = 0U;
 
+    vm->last_timers_update_time_ms = 0U;
     vm->sound_timer = 0U;
     vm->delay_timer = 0U;
+    vm->on_beep_func = NULL;
 }
 
 void freeVM(VM* vm) {
@@ -149,12 +173,14 @@ void clearKeyStates(VM* vm) {
     vm->keyboard_state = 0;
 }
 
-StepStatus step(VM* vm) {
+StepStatus step(VM* vm, uint64_t time_ms) {
     if (vm->program_counter >= CHIP8_ADDRESS_SPACE) {
         // We are most likely long outside of our allocated memory bounds,
         // aborting.
         return STATUS_OUT_OF_MEMORY_BOUNDS;
     }
+
+    updateTimers(vm, time_ms);
 
     WORD opcode = readNextOpcode(&vm->memory[vm->program_counter]);
     OpcodeType type = getOpcodeType(opcode);
@@ -359,7 +385,7 @@ StepStatus step(VM* vm) {
         }
         case OP_GET_DELAY: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
-            // TODO
+            vm->registers[reg] = vm->delay_timer;
             break;
         }
         case OP_AWAIT_KEY: {
@@ -383,12 +409,13 @@ StepStatus step(VM* vm) {
         case OP_SET_DELAY: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
             BYTE delay = vm->registers[reg];
-            // TODO
+            vm->delay_timer = delay;
             break;
         }
         case OP_SET_SOUND: {
             uint8_t reg = (opcode & 0x0F00) >> 8;
             BYTE sound = vm->registers[reg];
+            vm->sound_timer = sound;
             break;
         }
         case OP_ADR_ADD: {
